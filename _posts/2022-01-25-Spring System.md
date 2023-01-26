@@ -16,27 +16,27 @@ Recently, as part of some work, I'd been exploring the idea of warping pixels in
 Hence, I'll be going over how I implemented this in Python. This will be much more barebones than the actual use-case and of course, the actual implementation; however, I still thought it was pretty cool! So here goes.
 
 # Spring Elements and FEM?
-Okay, so I've mentioned spring elements. But what are they? Taking a step back, what even are "elements" and where do they come from? Essentially, this term comes from the popular method used to solve differential equations ranging from those in structural analysis for buildings to those in heat transfer and fluid flow. It's essentially a numerical approach to solving constrained (having boundary conditions) partial differential equations in multiple (2-3) dimensions.
+Okay, so I've mentioned spring elements. But what are they? Taking a step back, what even are "elements" and where do they come from? Essentially, this term comes from the a popular method which is used to solve differential equations ranging from those in structual analysis for buildings to those in heat transfer and fluid flow. It's essentially a numerical approach to solving contrained (having boundary conditions) partial differential equations in multiple (2-3) dimensions.
 {: .text-justify}
 
-Typically, this involves creating a "mesh" of some sort, discretizing the 2D space in an image and producing the numerical solution for some kind of metric on these discrete points, considering that some of these points are constrained. The way that we discretize our space is what the "element" is. For instance, if we divide our space into mesh made of squares, we have square elements.
+Typically, this involves the creating of a "mesh" of some sort, discretizing the 2D space in an image and producing the numerical solution for some kind of metric on these discrete points considering that some of these points are constrained. The way that we discretize our space is what the "element" is. For instance, if we divide our space into mesh made of squares, we have square elements.
 In our case, we use triangular elements and solve for displacements along the vertices of these triangles.
 {: .text-justify}
 
-And finally, why do we call it "spring" elements? Well, once we've divided our space into triangular elements, we must ask ourselves an important question. How are the vertices related to one another? For instance, for a solid object, it might be a good idea to say that the vertices are rigid relative to one another. In other words, since the overall geometry of the object should not change, points are not allowed to move closer or farther away from its neighbours. However, suppose you wanted to simulate a stretchy material (like most fabrics). In this case, we want points to be able to stretch away from each other, but still have a force pulling them back to it's original position. This is exactly how springs work! They produce a restorative force proportional to the change in length of the spring (Hooke's Law). 
+And finally, why do we call it "spring" elements? Well, once we've divided our space into triangular elements, we must ask ourselves an important question. How are the vertices related to one another? For instance, for a solid object, it might be a good idea to say that the vertices are rigid relative to one another. In other words, since the overall geometery of the object should not change, points are not allowed to move closer or father away from its neighbours. However, suppose you wanted to simulate a stretchy material (like most fabrics). In this case, we want points to be able to stretch away from each other, but still have a force pulling them back to it's original position. This is exactly how springs work! They produce a restorative force proportional to the change in length of the spring (Hooke's Law). 
 {: .text-justify}
 
 $$ F_s = -k * \Delta x $$
 
 ![Spring Figure](spring_fig.png)
-_A triangle element system where Hooke's Law relates its vertices._
+_A triangle element system where the vertices are related by Hooke's Law._
 
 # Building SES for images
-So, now we know what spring elements are. Let's get into creating one for images. We'll be taking a pretty basic example. We'll start by taking a random clothing texture as below. I've taken one with a few shadows on it so that we can actually see what happening as we build the system out.
+So, now we know what spring elements are. Let's get into creating one for images. We'll be taking a pretty basic example. We'll start by taking a random clothing texture as below. I've taken one with a little bit of shadows on it so that we can actually see what happening as we build the system out.
 
 ![Sample Fabric](sample_texture.jpg)
 
-Now we'll define an arbitrary set of constrained points. Of course, usually this corresponds to some sort of mask which will stay constant over time. However, for illustrative purposes, I've taken a sample ring that will move from the top-left corner of the texture to the center of it.
+Now we'll define an arbitrary set of constrained points. Of course, usually this corresponds to some sort of mask which will stay constant over time. However, for illustrative purposes, I've taken a sample ring which will move from the top-left corner of the texture to the center of it.
 
 |$I^t$            |  $I^{t+1}$                        |
 :-------------------------:|:-------------------------:
@@ -76,17 +76,17 @@ K_h &= \text{spring constant for F-H and H-H connections} \nonumber \\
 K_f &= \text{spring constant for F-F connections} \nonumber 
 \end{aligned}$$
 
-To illustrate things, let's take a simple system as shown below. Here the points marked in **blue** define our **constrained points** and the points marked in **red** define the **free points** for which their initial point in $I^t$ needs to be solved for. 
+To illustrate things, lets take a simple system as shown below. Here the points marked in **blue** define our **constrained points** and the points marked in **red** define the **free points** for which their initial point in $I^t$ needs to be solved for. 
 
 |Image Frame|Constrained Points ($C$)        |  Free Points ($F$) |
 :-------------------------:|:-------------------------:|:-------------------------:
 $I^t$|![Initial Mask](constrained_image_initial_red.png)  |  THIS NEEDS TO BE SOLVED FOR
 $I^{t+1}$|![Initial Mask](constrained_image_final_red.png)  |  ![Final Mask](free_image_final_blue.png)
 
->Here, $F$ is selected as a random normal distribution of points in 2D space. I used a knob, `n_frac`, to control the fraction of free points we take to solve. Technically, we could solve for **every** free point, but that's incredibly slow and inefficient (hence why we interpolate at the end). By using `n_frac`, we can take a conveniently small fraction of points that work for larger images (512/1025/etc) with small tradeoffs in warping quality. 
+>Here, $F$ is selected as a random normal distribution of points in 2D space. I used a knob `n_frac` to control the fraction of free points we take to solve. Technically, we could solve for **every** free point, but that's incredibly slow and inefficient (hence why we interpolate at the end). By using `n_frac`, we can take a conveniently small fraction of points that works for larger images (512/1025/etc) with small tradeoffs in warping quality. 
 {: .prompt-info }
 
-With these in mind we also define two convenience terms. If you were to take an arbitrary spring connecting two points ($S_{ab}$), we define $P(S_a)$ and $P(S_b)$ as the current positions of vertices $a$ and $b$, respectively.
+With these in mind we also define two convenience terms. If you were to take an arbitrary spring connecting two points ($S_{ab}$), we define $P(S_a)$ and $P(S_b)$ as the current positions of vertices $a$ and $b$ respectively.
 
 $$\begin{aligned}
 P_{sa} &= P(S_a) \nonumber \\
@@ -110,7 +110,7 @@ Thus obtaining,
 
 $$F_{old}=F_{new}=-K$$
 
-Hence to avoid both the messy derivation later and to correctly maintain the force on a vertex, we generalize the above equation by normalizing the spring constants by the initial distance between the vertices $l_0$.
+Hence to avoid both the messy derivation later and to correctly maintain the force on a vertex, we generalize the above equation by nomalizing the spring constants by the initial distance between the vertices $l_0$.
 
 $$\begin{aligned}
 l_0 &= ||P_0(S_a) - P_0(S_b)|| \nonumber \\
@@ -124,7 +124,7 @@ K_s &= \begin{cases}
 The next step involves creating the aforementioned "mesh". We primarily use triangular elements because in 2D space, 3 points define the minimum number of points required to define an area in an image. This is later relevant for linearly interpolating the displacements for points inside each triangular element using their barycentric coordinates.
 {: .text-justify}
 
-There are a number of ways in which we can create this mesh. But the simplest of them involves using an approach called [**Delaunay Triangulation**](https://gwlucastrig.github.io/TinfourDocs/DelaunayIntro/index.html). While this approach offers a number of benefits, few of the main perks are that it produces **non-inverted**, **non-skinny** triangles. These kinds of triangles are nice for us particularly because our approach tends to produce $C_1$ [**discontinuities**](https://root.cern/TaligentDocs/TaligentOnline/DocumentRoot/1.0/Docs/books/GS/GS_68.html) along the boundaries between triangles during linear interpolation. Skinny triangles increase the likelihood of these occurring and are generally far less visually pleasing. 
+There are a number of ways in which we can create this mesh. But the simplest of them involves using an approach called [**Delaunay Triangulation**](https://gwlucastrig.github.io/TinfourDocs/DelaunayIntro/index.html). While this approach offers a number of benefits, few of the main perks are that it produces **non-inverted**, **non-skinny** triangles. These kinds of triangles are nice for us particularly because our approach tends to produce $C_1$ [**discontinuities**](https://root.cern/TaligentDocs/TaligentOnline/DocumentRoot/1.0/Docs/books/GS/GS_68.html) along the boundaries between triangles during linear interpolation. Skinny triangles increase the likelyhood of these occuring and are generally far less visually pleasing. 
 {: .text-justify}
 
 Performing the triangulation is relatively simple. We use `scipy`'s `spatial` module to subdivide the image into triangles. One particular advantage of this (and the reason I prefer this over OpenCV's implementation) is the convenience of being able to use `scipy.spatial.Delaunay`'s helper methods to get the barycentric coordinates of points inside each triangle (or `simplex` as per the [**documentation**](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.Delaunay.html)).
@@ -150,7 +150,7 @@ $I^{t+1}$|![Initial Mask](overall_image_final_green.png)  |  ![Triangulation Vis
 {: .prompt-info }
 
 ## Selecting a force constant and computing energy term
-To compute the energy, we begin by defining the spring constant $K_h$, $K_f$ and subsequently $K_s$. To do this, we first need to the set of all edges between vertices in the image (to define the springs in the system). We've already obtained the `triangle_list` from the previous section, and we can use a fairly straightforward trick to vectorize the process of getting all the springs.
+To compute the energy, we begin by defining the spring constant $K_h$, $K_f$ and subsequently $K_s$. To do this, we first need to the set of all edges between vertices in the image (to define the springs in the system). We've already obtained the `triangle_list` from the previous section, and we can use a fairly strightforward trick to vectorize the process of getting all the springs.
 
 ```python
 import numpy as np
@@ -158,7 +158,7 @@ p_sa = np.concatenate(triangle_list, axis=0)
 p_sb = np.concatenate(np.concatenate([triangle_list[:,-2:,:],triangle_list[:,:-2,:]], axis=1))
 ```
 
-The first line is pretty obvious; we're concatenating all the triplets we get from `triangle_list` into and $N \times 2$ vector as shown below.
+The first line is pretty obvious, we're concatenating all the triplets we get from `triangle_list` into and $N \times 2$ vector as shown below.
 
 $$
 \begin{pmatrix}
@@ -277,10 +277,10 @@ $$
 E = \sum_{s \in S} K_s ||P_{sa}-P_{sb}||^2
 $$
 
-In all fairness, computing the energy term here isn't **necessary**. However, it does serve as a sanity check for later when we test out the assembly approach. Since **assembly** simply refers to re-ordering the above equation before differentiating, the numerical value of the energy term $E$ must remain the same.
+In all fairness, computing the energy term here isn't **necessary**. However, it does serve as a sanity check for later when we test out assembly approach. Since **assembly** simply refers to re-ordering the above equation before differentiating, the numerical value of the energy term $E$ must remain the same.
 
 ## Assembling the system into a linear equation
-Assembly is the next key stage in the process. While all ominous sounding, assembly refers to the idea of rearranging the energy term above into a standard form.
+Assembly is the next key stage in the process. While all ominous sounding, assembly referes to idea of rearraging the energy term above into a standard form.
 
 $$\begin{aligned}[b]
 E &= \sum_{s \in S} K_s ||P_{sa}-P_{sb}||^2  \\
@@ -290,7 +290,7 @@ E &= \sum_{s \in S} K_s ||P_{sa}-P_{sb}||^2  \\
     &= v \times K \times v^T
 \end{aligned}$$
 
-Here, the process of converting the expansion of $E$ into $vKv^T$ is known as assembly. While in theory, this is a fairly straightforward process, implementing it in python turns out to be a pain in the neck. To begin with, implementing this as a loop ends up with the process taking over **5 minutes** per image!
+For instance here, the process of converting the expansion of the energy term $E$ into the template of $vKv^T$ is known as assembly. While in theory this is a fairly straightforward process, implementing it in python turns out to be a pain in the neck. To begin with, implementing this as a loop ends up with the process taking over **5 minutes** per image!
 
 The process of converting the energy term into $vKv^T$ involves two parts.
 1. Generating $v$ which is the set of all unique vertices ({x,y} coordinates) we obtain from $P_{sa}$ **and** $P_{sb}$ and group them into free/constrained points.
@@ -470,7 +470,7 @@ Then a similar interpolation operation as mentioned above can be used to compute
 
 $$WF_{inter} = \Delta(WF) + (i,j)$$
 
-One particular reason I prefer this way is that it's much easier to visualize the displacements as opposed to the pointers (which tend to look like a smooth gradient if done correctly).
+One particular reason I prefer this way is because it's much easier to visualize the displacements as opposed to the pointers (which tend to look like a smooth gradient if done correctly).
 
 $I_t$  |  Post-Interpolation I^{t+1} |
 :-------------------------:|:-------------------------:
