@@ -1,8 +1,8 @@
 ---
 title: "Segmentation Of Heartbeat Sounds Using Shannon Energy Envelopes"
 date: 2018-09-27
-categories: [Embedded, Computer Vision]
-tags: [spring elements, scipy, opencv, numpy]
+categories: [Computer Vision, Signals Processing]
+tags: [opencv, matlab, numpy]
 math: true
 img_path: /docs/assets/shannon_energy
 ---
