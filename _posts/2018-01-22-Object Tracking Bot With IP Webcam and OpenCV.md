@@ -1,6 +1,5 @@
 ---
 title: "Object Tracking Bot With IP Webcam and OpenCV"
-date: 2019-08-27
 categories: [Embedded, Computer Vision]
 tags: [spring elements, scipy, opencv, numpy]
 math: true
