@@ -15,3 +15,6 @@ I'd prefer if you contacted me via email, but do feel free to reach on on my soc
 {: .text-justify}
 
 **Email**: adithya.narayan943@gmail.com 
+
+## About the blog
+The typo in the url is definitely intentional. Well, no it wasn't but then it had this dorky charm to it so I decided to keep it anyway.

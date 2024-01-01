@@ -7,7 +7,7 @@ math: true
 img_path: /docs/assets/object_tracking_bot
 ---
 # Introduction
-So, recently, I've been working on a 4-wheeled bot capable following a uniformly colored, regular object. Given that I haven't posted in a while and I'm still trying to figure out the nature of this blog, I've decided to go ahead and summarize the process of me trying to build this.  For the purpose of clarity, I've split the post into the three larger domains of work. Also, you can find the entire work on my github page.
+So, recently, I've been working on a 4-wheeled bot capable following a uniformly colored, regular object. Given that I'm still trying to figure out the nature of this blog, I've decided to go ahead and summarize the process of me trying to build this.  For the purpose of clarity, I've split the post into the three larger domains of work. Also, you can find the entire work on my github page.
 
 # Tracking
 To begin with, I needed some way to send video data of what the bot was seeing to the computer so that it could be processed using OpenCV. Given that I didn't have any small camera lying around, I decided to use my phone. In particular, there's a pretty convenient Android application called "IP Webcam" with which you can stream video to a local IP address. It also has pretty nifty additional features like remotely turning on your phone camera's light, enabling night vision, motion detection, etc.
